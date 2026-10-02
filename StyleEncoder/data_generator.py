@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 import albumentations as A
 from skimage import io, transform
 import cv2
+from pathlib import Path #newly added for class name extraction
 
 class CatsDataset(Dataset):
     """
@@ -11,7 +12,7 @@ class CatsDataset(Dataset):
     def __init__(self, imagespath, augment=None):
         self.imagespath = imagespath
         self.augment = augment
-        self.names = ['/black/', '/blackwhite/', '/gray/', '/siberian/', '/siamese/', '/ginger/', '/gingerwhite/', '/white/', '/other/']
+        self.names = ["shadow", "shadow_free", "mask"] ##現在はデータセットの名前として書き換え
 
     def __len__(self):
         return len(self.imagespath)
@@ -41,8 +42,15 @@ class CatsDataset(Dataset):
         image = image.permute(2, 0, 1)
         
         # Assign a label to the image by the folder name
-        for name in self.names:
-            if name in image_path:
-                label_idx = torch.tensor(self.names.index(name), dtype=torch.long)
-                
-        return image, label_idx, image_path
+        #for name in self.names:
+            #if name in image_path:
+                #label_idx = torch.tensor(self.names.index(name), dtype=torch.long)
+        
+        class_name = Path(image_path).parent.name
+        if class_name not in self.names:
+            raise ValueError(f"Unknown class folder: {class_name}")
+        label_idx = torch.tensor(self.names.index(class_name), dtype=torch.long)
+                ##卒論用に書き換えて有る
+
+        return image, label_idx, image_path 
+        
